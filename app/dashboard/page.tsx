@@ -73,6 +73,7 @@ export default function DashboardPage() {
                 <div className="h-[calc(100vh-8rem)]">
                   <OrgChartCanvas
                     tree={tree}
+                    allEmployees={allEmployees}
                     filter={filter}
                     onFilterChange={setFilter}
                   />

@@ -8,6 +8,9 @@ export interface FlowNode {
     employee: OrgTreeNode["employee"];
     directReports: number;
     depth: number;
+    isExpanded: boolean;
+    hasChildren: boolean;
+    managerName: string | null;
   };
 }
 
@@ -18,18 +21,20 @@ export interface FlowEdge {
   type: "smoothstep";
 }
 
-const NODE_WIDTH = 260;
-const NODE_HEIGHT = 160;
+const NODE_WIDTH = 280;
+const NODE_HEIGHT = 185;
 const HORIZONTAL_GAP = 40;
-const VERTICAL_GAP = 80;
+const VERTICAL_GAP = 70;
 
 /**
- * Converts the logical OrgTree into React Flow nodes and edges
- * with calculated positions. Uses a recursive width-based layout
- * that centers parents above their children.
+ * Converts the logical OrgTree into React Flow nodes and edges,
+ * respecting which nodes are expanded. Only children of expanded
+ * nodes are rendered.
  */
 export function computeFlowLayout(
-  roots: OrgTreeNode[]
+  roots: OrgTreeNode[],
+  expandedNodes: Set<string>,
+  employeeMap: Map<string, string>
 ): { nodes: FlowNode[]; edges: FlowEdge[] } {
   const nodes: FlowNode[] = [];
   const edges: FlowEdge[] = [];
@@ -37,20 +42,26 @@ export function computeFlowLayout(
   let xOffset = 0;
 
   for (const root of roots) {
-    const width = layoutSubtree(root, xOffset, 0, nodes, edges);
+    const width = layoutSubtree(root, xOffset, 0, nodes, edges, expandedNodes, employeeMap);
     xOffset += width + HORIZONTAL_GAP;
   }
 
   return { nodes, edges };
 }
 
-function getSubtreeWidth(node: OrgTreeNode): number {
-  if (node.children.length === 0) {
+function getVisibleSubtreeWidth(
+  node: OrgTreeNode,
+  expandedNodes: Set<string>
+): number {
+  const isExpanded = expandedNodes.has(node.employee.employeeId);
+
+  if (!isExpanded || node.children.length === 0) {
     return NODE_WIDTH;
   }
 
   const childrenWidth = node.children.reduce(
-    (sum, child) => sum + getSubtreeWidth(child) + HORIZONTAL_GAP,
+    (sum, child) =>
+      sum + getVisibleSubtreeWidth(child, expandedNodes) + HORIZONTAL_GAP,
     -HORIZONTAL_GAP
   );
 
@@ -62,10 +73,16 @@ function layoutSubtree(
   x: number,
   y: number,
   nodes: FlowNode[],
-  edges: FlowEdge[]
+  edges: FlowEdge[],
+  expandedNodes: Set<string>,
+  employeeMap: Map<string, string>
 ): number {
-  const subtreeWidth = getSubtreeWidth(node);
+  const isExpanded = expandedNodes.has(node.employee.employeeId);
+  const subtreeWidth = getVisibleSubtreeWidth(node, expandedNodes);
   const nodeX = x + subtreeWidth / 2 - NODE_WIDTH / 2;
+
+  const managerId = node.employee.reportingManagerId;
+  const managerName = managerId ? employeeMap.get(managerId) ?? null : null;
 
   nodes.push({
     id: node.employee.employeeId,
@@ -75,15 +92,26 @@ function layoutSubtree(
       employee: node.employee,
       directReports: node.children.length,
       depth: node.depth,
+      isExpanded,
+      hasChildren: node.children.length > 0,
+      managerName,
     },
   });
 
-  if (node.children.length > 0) {
+  if (isExpanded && node.children.length > 0) {
     let childX = x;
     const childY = y + NODE_HEIGHT + VERTICAL_GAP;
 
     for (const child of node.children) {
-      const childWidth = layoutSubtree(child, childX, childY, nodes, edges);
+      const childWidth = layoutSubtree(
+        child,
+        childX,
+        childY,
+        nodes,
+        edges,
+        expandedNodes,
+        employeeMap
+      );
 
       edges.push({
         id: `${node.employee.employeeId}-${child.employee.employeeId}`,
@@ -97,4 +125,19 @@ function layoutSubtree(
   }
 
   return subtreeWidth;
+}
+
+/**
+ * Collect all node IDs that have children (for expand-all).
+ */
+export function collectParentIds(roots: OrgTreeNode[]): string[] {
+  const ids: string[] = [];
+  function walk(node: OrgTreeNode) {
+    if (node.children.length > 0) {
+      ids.push(node.employee.employeeId);
+      node.children.forEach(walk);
+    }
+  }
+  roots.forEach(walk);
+  return ids;
 }

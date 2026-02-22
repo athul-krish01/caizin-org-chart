@@ -1,61 +1,120 @@
 "use client";
 
-import { useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import {
   ReactFlow,
   Background,
   BackgroundVariant,
   ReactFlowProvider,
   useReactFlow,
+  applyNodeChanges,
+  applyEdgeChanges,
   type NodeTypes,
   type EdgeTypes,
+  type NodeChange,
+  type EdgeChange,
+  type Node,
+  type Edge,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
 import type { OrgTreeNode, EmploymentFilter } from "@/lib/types/employee";
 import { computeFlowLayout } from "@/lib/hierarchy/layout";
-import { OrgNode } from "./org-node";
+import { useChartState } from "@/hooks/use-chart-state";
+import { OrgNode, type OrgNodeData } from "./org-node";
 import { OrgEdge } from "./org-edge";
 import { ChartControls } from "./chart-controls";
 import { ChartFilters } from "./chart-filters";
 
-const nodeTypes: NodeTypes = { orgNode: OrgNode as unknown as NodeTypes[string] };
-const edgeTypes: EdgeTypes = { smoothstep: OrgEdge as unknown as EdgeTypes[string] };
+const nodeTypes: NodeTypes = {
+  orgNode: OrgNode as unknown as NodeTypes[string],
+};
+const edgeTypes: EdgeTypes = {
+  smoothstep: OrgEdge as unknown as EdgeTypes[string],
+};
 
 interface OrgChartCanvasProps {
   tree: OrgTreeNode[];
+  allEmployees: { employeeId: string; name: string }[];
   filter: EmploymentFilter;
   onFilterChange: (filter: EmploymentFilter) => void;
 }
 
-function OrgChartInner({ tree, filter, onFilterChange }: OrgChartCanvasProps) {
+function OrgChartInner({
+  tree,
+  allEmployees,
+  filter,
+  onFilterChange,
+}: OrgChartCanvasProps) {
   const { fitView } = useReactFlow();
+  const { expandedNodes, toggleNode, expandAll, collapseAll } =
+    useChartState(tree);
+  const prevNodeCountRef = useRef(0);
 
-  const { nodes, edges } = useMemo(
-    () => computeFlowLayout(tree),
-    [tree]
+  const [rfNodes, setRfNodes] = useState<Node[]>([]);
+  const [rfEdges, setRfEdges] = useState<Edge[]>([]);
+
+  const employeeMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const emp of allEmployees) {
+      map.set(emp.employeeId, emp.name);
+    }
+    return map;
+  }, [allEmployees]);
+
+  useEffect(() => {
+    const { nodes, edges } = computeFlowLayout(tree, expandedNodes, employeeMap);
+    const withCallbacks = nodes.map((node) => ({
+      ...node,
+      data: { ...node.data, onToggle: toggleNode },
+    }));
+    setRfNodes(withCallbacks as Node[]);
+    setRfEdges(edges as Edge[]);
+  }, [tree, expandedNodes, employeeMap, toggleNode]);
+
+  const handleNodeClick = useCallback(
+    (_event: React.MouseEvent, node: Node) => {
+      const nodeData = node.data as unknown as OrgNodeData;
+      if (nodeData.hasChildren) {
+        toggleNode(node.id);
+      }
+    },
+    [toggleNode]
   );
 
-  const allNodeIds = useMemo(
-    () => nodes.map((n) => n.id),
-    [nodes]
-  );
+  const onNodesChange = useCallback((changes: NodeChange[]) => {
+    setRfNodes((nds) => applyNodeChanges(changes, nds));
+  }, []);
+
+  const onEdgesChange = useCallback((changes: EdgeChange[]) => {
+    setRfEdges((eds) => applyEdgeChanges(changes, eds));
+  }, []);
+
+  useEffect(() => {
+    const currentCount = rfNodes.length;
+    if (currentCount !== prevNodeCountRef.current) {
+      prevNodeCountRef.current = currentCount;
+      const timer = setTimeout(() => fitView({ padding: 0.2 }), 60);
+      return () => clearTimeout(timer);
+    }
+  }, [rfNodes.length, fitView]);
 
   const handleExpandAll = useCallback(() => {
-    // In Phase 2, this will integrate with expand/collapse state.
-    // For now, all nodes are shown.
-    setTimeout(() => fitView({ padding: 0.2 }), 50);
-  }, [fitView]);
+    expandAll();
+  }, [expandAll]);
 
   const handleCollapseAll = useCallback(() => {
-    setTimeout(() => fitView({ padding: 0.2 }), 50);
-  }, [fitView]);
+    collapseAll();
+  }, [collapseAll]);
 
   return (
     <div className="relative h-full w-full">
       <ReactFlow
-        nodes={nodes}
-        edges={edges}
+        nodes={rfNodes}
+        edges={rfEdges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onNodeClick={handleNodeClick}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         fitView

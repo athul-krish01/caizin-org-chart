@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import type { OrgTreeNode } from "@/lib/types/employee";
+import { collectParentIds } from "@/lib/hierarchy/layout";
 
-export function useChartState() {
-  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(
-    new Set()
-  );
-  const [focusedNodeId, setFocusedNodeId] = useState<string | null>(null);
+export function useChartState(tree: OrgTreeNode[]) {
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
 
   const toggleNode = useCallback((nodeId: string) => {
     setExpandedNodes((prev) => {
@@ -20,30 +19,19 @@ export function useChartState() {
     });
   }, []);
 
-  const expandAll = useCallback((allNodeIds: string[]) => {
-    setExpandedNodes(new Set(allNodeIds));
-  }, []);
+  const expandAll = useCallback(() => {
+    const allParents = collectParentIds(tree);
+    setExpandedNodes(new Set(allParents));
+  }, [tree]);
 
   const collapseAll = useCallback(() => {
     setExpandedNodes(new Set());
   }, []);
 
-  const isExpanded = useCallback(
-    (nodeId: string) => expandedNodes.has(nodeId),
-    [expandedNodes]
-  );
-
-  const focusNode = useCallback((nodeId: string | null) => {
-    setFocusedNodeId(nodeId);
-  }, []);
-
   return {
     expandedNodes,
-    focusedNodeId,
     toggleNode,
     expandAll,
     collapseAll,
-    isExpanded,
-    focusNode,
   };
 }

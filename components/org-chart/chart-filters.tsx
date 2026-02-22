@@ -11,9 +11,8 @@ interface ChartFiltersProps {
 
 const FILTERS: { value: EmploymentFilter; label: string }[] = [
   { value: "all", label: "All" },
-  { value: "internal", label: "Internal" },
+  { value: "internal", label: "Internal (Caizin)" },
   { value: "contractor", label: "Contractor" },
-  { value: "caizin", label: "Caizin" },
 ];
 
 export function ChartFilters({ active, onChange, className }: ChartFiltersProps) {

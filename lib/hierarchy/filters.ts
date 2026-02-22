@@ -5,6 +5,11 @@ export function filterByEmploymentType(
   filter: EmploymentFilter
 ): Employee[] {
   if (filter === "all") return employees;
+  if (filter === "internal") {
+    return employees.filter(
+      (e) => e.employmentType === "internal" || e.employmentType === "caizin"
+    );
+  }
   return employees.filter((e) => e.employmentType === filter);
 }
 
