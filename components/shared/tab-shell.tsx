@@ -20,18 +20,18 @@ export function TabShell({ tabs, defaultTab }: TabShellProps) {
   const current = tabs.find((t) => t.id === activeTab);
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex border-b border-neutral-200 dark:border-neutral-800">
+    <div className="flex h-full flex-col">
+      <div className="flex gap-1 border-b border-border bg-card px-6">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={cn(
-              "px-6 py-3 text-sm font-medium transition-colors",
-              "hover:text-neutral-900 dark:hover:text-neutral-100",
+              "relative px-4 py-3 text-[13px] font-medium transition-colors",
+              "hover:text-foreground",
               activeTab === tab.id
-                ? "border-b-2 border-neutral-900 dark:border-neutral-100 text-neutral-900 dark:text-neutral-100"
-                : "text-neutral-500 dark:text-neutral-400"
+                ? "text-foreground after:absolute after:inset-x-0 after:bottom-0 after:h-[2px] after:rounded-full after:bg-blue-600"
+                : "text-muted-foreground"
             )}
           >
             {tab.label}

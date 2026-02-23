@@ -20,18 +20,19 @@ export default function DashboardPage() {
   } = useOrgData();
 
   return (
-    <div className="flex h-screen flex-col">
-      <header className="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-800 px-6 py-4">
+    <div className="flex h-screen flex-col bg-background">
+      <header className="flex items-center justify-between border-b border-border bg-card px-8 py-4">
         <div>
-          <h1 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
+          <h1 className="text-[22px] font-semibold leading-tight tracking-tight text-foreground">
             Caizin Org Chart
           </h1>
-          <p className="text-xs text-neutral-500">
+          <p className="mt-0.5 text-[13px] text-muted-foreground">
             Organizational Structure Explorer
           </p>
         </div>
         {isDemo && (
-          <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FFFBEB] px-3 py-1 text-xs font-medium text-amber-700">
+            <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
             Demo data
           </span>
         )}
@@ -44,7 +45,7 @@ export default function DashboardPage() {
               id: "overview",
               label: "Overview",
               content: (
-                <div className="space-y-6 p-6 max-w-7xl mx-auto">
+                <div className="mx-auto max-w-7xl space-y-10 px-8 py-8">
                   <ExecutiveSnapshot snapshot={snapshot} />
                   <HierarchyExplorer
                     tierGroups={tierGroups}
@@ -58,7 +59,7 @@ export default function DashboardPage() {
               id: "org-chart",
               label: "Org Chart",
               content: (
-                <div className="h-[calc(100vh-8rem)]">
+                <div className="h-[calc(100vh-8rem)] border-t border-border/40 bg-background">
                   <OrgChartCanvas
                     tree={tree}
                     allEmployees={allEmployees}

@@ -19,7 +19,7 @@ export function ChartFilters({ active, onChange, className }: ChartFiltersProps)
   return (
     <div
       className={cn(
-        "flex items-center gap-1 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 p-1 shadow-sm",
+        "flex items-center gap-0.5 rounded-[10px] border border-border bg-card p-1 shadow-[0_1px_3px_rgba(0,0,0,0.04)]",
         className
       )}
     >
@@ -28,10 +28,10 @@ export function ChartFilters({ active, onChange, className }: ChartFiltersProps)
           key={f.value}
           onClick={() => onChange(f.value)}
           className={cn(
-            "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+            "rounded-md px-3.5 py-1.5 text-[12px] font-medium transition-all",
             active === f.value
-              ? "bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900"
-              : "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+              ? "bg-blue-600 text-white shadow-[0_1px_2px_rgba(37,99,235,0.3)]"
+              : "text-muted-foreground hover:bg-secondary hover:text-foreground"
           )}
         >
           {f.label}

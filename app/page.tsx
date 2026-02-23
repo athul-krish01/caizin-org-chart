@@ -39,30 +39,32 @@ export default function Home() {
   }, [router]);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-neutral-50 dark:bg-neutral-950 p-6">
+    <main className="flex min-h-screen items-center justify-center bg-background p-6">
       <div className="w-full max-w-lg">
-        <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+        <div className="mb-10 text-center">
+          <h1 className="text-[22px] font-semibold tracking-tight text-foreground">
             Caizin Org Chart
           </h1>
-          <p className="mt-2 text-sm text-neutral-500">
+          <p className="mt-1.5 text-[13px] text-muted-foreground">
             Upload your Excel file to visualize organizational structure
           </p>
         </div>
 
-        <UploadZone
-          onFileSelected={handleFile}
-          disabled={status === "loading"}
-        />
+        <div className="rounded-[10px] border border-border bg-card p-1 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+          <UploadZone
+            onFileSelected={handleFile}
+            disabled={status === "loading"}
+          />
+        </div>
         <UploadStatus status={status} error={error} validation={null} />
 
-        <div className="mt-6 text-center">
+        <div className="mt-8 text-center">
           <button
             onClick={handleSkip}
             disabled={status === "loading"}
-            className="text-sm text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 underline underline-offset-4 transition-colors disabled:opacity-40"
+            className="text-[13px] text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground disabled:opacity-40"
           >
-            Skip — use demo data
+            Skip &mdash; use demo data
           </button>
         </div>
       </div>

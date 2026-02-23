@@ -4,28 +4,29 @@ interface StatsCardProps {
   label: string;
   value: number | string;
   icon?: React.ReactNode;
+  iconClassName?: string;
   className?: string;
 }
 
-export function StatsCard({ label, value, icon, className }: StatsCardProps) {
+export function StatsCard({ label, value, icon, iconClassName, className }: StatsCardProps) {
   return (
     <div
       className={cn(
-        "flex items-center gap-4 rounded-xl border border-neutral-200 dark:border-neutral-800",
-        "bg-white dark:bg-neutral-950 p-5",
+        "flex items-center gap-4 rounded-[10px] border border-border",
+        "bg-card p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]",
         className
       )}
     >
       {icon && (
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
+        <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary text-muted-foreground", iconClassName)}>
           {icon}
         </div>
       )}
       <div>
-        <p className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
+        <p className="text-[28px] font-bold tracking-tight text-foreground">
           {value}
         </p>
-        <p className="text-sm text-neutral-500 dark:text-neutral-400">
+        <p className="text-xs font-medium text-muted-foreground">
           {label}
         </p>
       </div>

@@ -13,21 +13,25 @@ export function ExecutiveSnapshot({ snapshot }: ExecutiveSnapshotProps) {
         label="Total People"
         value={snapshot.totalHeadcount}
         icon={<Users className="h-5 w-5" />}
+        iconClassName="bg-blue-50 text-blue-600"
       />
       <StatsCard
         label="Caizin Employees"
         value={snapshot.internalCount}
         icon={<UserCheck className="h-5 w-5" />}
+        iconClassName="bg-teal-50 text-teal-600"
       />
       <StatsCard
         label="Contractors"
         value={snapshot.contractorCount}
         icon={<Briefcase className="h-5 w-5" />}
+        iconClassName="bg-amber-50 text-amber-600"
       />
       <StatsCard
         label="Total Departments"
         value={snapshot.totalDepartments}
         icon={<Building2 className="h-5 w-5" />}
+        iconClassName="bg-violet-50 text-violet-600"
       />
     </div>
   );

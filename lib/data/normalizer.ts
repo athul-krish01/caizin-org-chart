@@ -38,7 +38,6 @@ function parseSkills(raw?: string): string[] {
 
 export function normalizeRow(row: RawEmployeeRow): Employee {
   const level = row.level.trim();
-  console.log("Department value before normalize:", row.department);
   return {
     employeeId: row.employeeId.trim(),
     name: row.name.trim(),

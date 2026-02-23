@@ -1,4 +1,6 @@
+import { BarChart3 } from "lucide-react";
 import type { DepartmentDistribution as DistType } from "@/lib/types/employee";
+import { getDeptColor } from "@/lib/constants/department-colors";
 
 interface WorkforceCompositionProps {
   data: DistType[];
@@ -6,48 +8,99 @@ interface WorkforceCompositionProps {
 
 export function DepartmentDistribution({ data }: WorkforceCompositionProps) {
   const maxCount = Math.max(...data.map((d) => d.count), 1);
+  const totalPeople = data.reduce((s, d) => s + d.count, 0);
 
   return (
-    <div className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950">
-      <div className="border-b border-neutral-200 dark:border-neutral-800 px-5 py-4">
-        <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-          Workforce Composition
-        </h3>
+    <div className="rounded-[10px] border border-border bg-card shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-border px-5 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-50 text-violet-600">
+            <BarChart3 className="h-4 w-4" />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-foreground">
+              Workforce Composition
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              {data.length} departments &middot; {totalPeople} people
+            </p>
+          </div>
+        </div>
       </div>
-      <div className="p-5 space-y-4">
-        {data.map((item) => (
-          <div key={item.department} className="space-y-1.5">
-            <div className="flex items-baseline justify-between text-sm">
-              <div className="flex items-baseline gap-2">
-                <span className="font-medium text-neutral-900 dark:text-neutral-100">
-                  {item.department}
-                </span>
-                <span className="text-xs text-neutral-500">
-                  {item.internalCount} Internal{item.contractorCount > 0 && `, ${item.contractorCount} Contractor${item.contractorCount !== 1 ? "s" : ""}`}
+
+      {/* Department grid */}
+      <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3">
+        {data.map((item, i) => {
+          const c = getDeptColor(item.department);
+          const pct = Math.round((item.count / totalPeople) * 100);
+          const internalPct = item.count > 0 ? Math.round((item.internalCount / item.count) * 100) : 0;
+
+          return (
+            <div
+              key={item.department}
+              className={`relative overflow-hidden rounded-lg border ${c.border} bg-card p-4 transition-shadow hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)]`}
+            >
+              {/* Accent bar */}
+              <div
+                className="absolute inset-y-0 left-0 w-1 rounded-l-lg"
+                style={{ backgroundColor: c.solid }}
+              />
+
+              {/* Top: name + total */}
+              <div className="flex items-start justify-between pl-2">
+                <div className="min-w-0">
+                  <p className={`truncate text-[13px] font-semibold ${c.text}`}>
+                    {item.department}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-muted-foreground">
+                    {pct}% of org
+                  </p>
+                </div>
+                <span className="text-xl font-bold tabular-nums text-foreground">
+                  {item.count}
                 </span>
               </div>
-              <span className="font-semibold text-neutral-900 dark:text-neutral-100 tabular-nums">
-                {item.count}
-              </span>
-            </div>
-            <div className="flex h-2 w-full overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800">
-              <div
-                className="h-2 bg-neutral-800 dark:bg-neutral-200 transition-all"
-                style={{
-                  width: `${(item.internalCount / maxCount) * 100}%`,
-                }}
-              />
-              {item.contractorCount > 0 && (
+
+              {/* Bar */}
+              <div className="mt-3 flex h-2 w-full overflow-hidden rounded-full bg-secondary pl-2">
                 <div
-                  className="h-2 bg-neutral-400 dark:bg-neutral-500 transition-all"
+                  className="h-full rounded-full transition-all duration-500"
                   style={{
-                    width: `${(item.contractorCount / maxCount) * 100}%`,
+                    width: `${(item.internalCount / maxCount) * 100}%`,
+                    backgroundColor: c.solid,
                   }}
                 />
-              )}
+                {item.contractorCount > 0 && (
+                  <div
+                    className="ml-0.5 h-full rounded-full bg-orange-300 transition-all duration-500"
+                    style={{
+                      width: `${(item.contractorCount / maxCount) * 100}%`,
+                    }}
+                  />
+                )}
+              </div>
+
+              {/* Bottom: breakdown */}
+              <div className="mt-2.5 flex items-center gap-3 pl-2 text-[11px]">
+                <span className="flex items-center gap-1 text-muted-foreground">
+                  <span
+                    className="inline-block h-1.5 w-1.5 rounded-full"
+                    style={{ backgroundColor: c.solid }}
+                  />
+                  {item.internalCount} internal
+                  <span className="ml-0.5 text-muted-foreground/60">({internalPct}%)</span>
+                </span>
+                {item.contractorCount > 0 && (
+                  <span className="flex items-center gap-1 text-muted-foreground">
+                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-orange-500" />
+                    {item.contractorCount} contractor{item.contractorCount !== 1 ? "s" : ""}
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
