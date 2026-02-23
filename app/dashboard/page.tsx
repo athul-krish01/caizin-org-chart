@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
 import { useOrgData } from "@/hooks/use-org-data";
-import { dummyEmployeeData } from "@/lib/data/dummy-data";
 import { TabShell } from "@/components/shared/tab-shell";
 import { ExecutiveSnapshot } from "@/components/macro/executive-snapshot";
 import { HierarchyExplorer } from "@/components/macro/hierarchy-explorer";
@@ -18,23 +16,8 @@ export default function DashboardPage() {
     departmentDistribution,
     filter,
     setFilter,
-    loadData,
-    loaded,
+    isDemo,
   } = useOrgData();
-
-  useEffect(() => {
-    if (!loaded) {
-      loadData(dummyEmployeeData);
-    }
-  }, [loaded, loadData]);
-
-  if (!loaded) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-sm text-neutral-500">Loading...</p>
-      </div>
-    );
-  }
 
   return (
     <div className="flex h-screen flex-col">
@@ -47,6 +30,11 @@ export default function DashboardPage() {
             Organizational Structure Explorer
           </p>
         </div>
+        {isDemo && (
+          <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700">
+            Demo data
+          </span>
+        )}
       </header>
 
       <div className="flex-1 overflow-hidden">

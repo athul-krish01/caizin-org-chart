@@ -1,16 +1,15 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo } from "react";
 import type {
-  Employee,
-  RawEmployeeRow,
   OrgTreeNode,
   TierGroup,
   OrgSnapshot,
   DepartmentDistribution,
   EmploymentFilter,
-  ValidationResult,
 } from "@/lib/types/employee";
+import { useOrgDataContext } from "@/contexts/org-data-context";
+import { dummyEmployeeData } from "@/lib/data/dummy-data";
 import { validateData } from "@/lib/data/validator";
 import { normalizeDataset } from "@/lib/data/normalizer";
 import { buildOrgTree } from "@/lib/hierarchy/tree-builder";
@@ -24,31 +23,25 @@ import {
   recalculateRoots,
 } from "@/lib/hierarchy/filters";
 
-interface OrgDataState {
-  employees: Employee[];
-  validation: ValidationResult | null;
-  loaded: boolean;
-}
-
 export function useOrgData() {
-  const [state, setState] = useState<OrgDataState>({
-    employees: [],
-    validation: null,
-    loaded: false,
-  });
-
+  const { rawRows } = useOrgDataContext();
   const [filter, setFilter] = useState<EmploymentFilter>("all");
 
-  const loadData = useCallback((rawRows: RawEmployeeRow[]) => {
-    const validation = validateData(rawRows);
-    const employees = normalizeDataset(rawRows);
-    setState({ employees, validation, loaded: true });
-  }, []);
+  // If context has uploaded rows use them; otherwise fall back to demo data.
+  const sourceRows = rawRows ?? dummyEmployeeData;
+  const isDemo = rawRows === null;
+
+  const validation = useMemo(() => validateData(sourceRows), [sourceRows]);
+
+  const allEmployees = useMemo(
+    () => normalizeDataset(sourceRows),
+    [sourceRows]
+  );
 
   const filteredEmployees = useMemo(() => {
-    const filtered = filterByEmploymentType(state.employees, filter);
+    const filtered = filterByEmploymentType(allEmployees, filter);
     return recalculateRoots(filtered);
-  }, [state.employees, filter]);
+  }, [allEmployees, filter]);
 
   const tree: OrgTreeNode[] = useMemo(
     () => buildOrgTree(filteredEmployees),
@@ -56,8 +49,8 @@ export function useOrgData() {
   );
 
   const snapshot: OrgSnapshot = useMemo(
-    () => computeSnapshot(state.employees),
-    [state.employees]
+    () => computeSnapshot(allEmployees),
+    [allEmployees]
   );
 
   const tierGroups: TierGroup[] = useMemo(
@@ -72,15 +65,14 @@ export function useOrgData() {
 
   return {
     employees: filteredEmployees,
-    allEmployees: state.employees,
+    allEmployees,
     tree,
     snapshot,
     tierGroups,
     departmentDistribution,
-    validation: state.validation,
-    loaded: state.loaded,
+    validation,
+    isDemo,
     filter,
     setFilter,
-    loadData,
   };
 }
