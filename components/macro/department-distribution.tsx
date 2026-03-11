@@ -1,12 +1,22 @@
+"use client";
+
+import { useState } from "react";
 import { BarChart3 } from "lucide-react";
-import type { DepartmentDistribution as DistType } from "@/lib/types/employee";
+import type { DepartmentDistribution as DistType, Employee } from "@/lib/types/employee";
 import { getDeptColor } from "@/lib/constants/department-colors";
+import { DepartmentEmployeesModal } from "./department-employees-modal";
 
 interface WorkforceCompositionProps {
   data: DistType[];
+  employees: Employee[];
 }
 
-export function DepartmentDistribution({ data }: WorkforceCompositionProps) {
+export function DepartmentDistribution({ data, employees }: WorkforceCompositionProps) {
+  const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null);
+
+  const departmentEmployees = selectedDepartment
+    ? employees.filter((e) => e.department === selectedDepartment)
+    : [];
   const maxCount = Math.max(...data.map((d) => d.count), 1);
   const totalPeople = data.reduce((s, d) => s + d.count, 0);
 
@@ -37,9 +47,11 @@ export function DepartmentDistribution({ data }: WorkforceCompositionProps) {
           const internalPct = item.count > 0 ? Math.round((item.internalCount / item.count) * 100) : 0;
 
           return (
-            <div
+            <button
               key={item.department}
-              className={`relative overflow-hidden rounded-lg border ${c.border} bg-card p-4 transition-shadow hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)]`}
+              type="button"
+              onClick={() => setSelectedDepartment(item.department)}
+              className={`relative w-full overflow-hidden rounded-lg border ${c.border} bg-card p-4 text-left transition-shadow hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)]`}
             >
               {/* Accent bar */}
               <div
@@ -98,10 +110,18 @@ export function DepartmentDistribution({ data }: WorkforceCompositionProps) {
                   </span>
                 )}
               </div>
-            </div>
+            </button>
           );
         })}
       </div>
+
+      {selectedDepartment && (
+        <DepartmentEmployeesModal
+          department={selectedDepartment}
+          employees={departmentEmployees}
+          onClose={() => setSelectedDepartment(null)}
+        />
+      )}
     </div>
   );
 }

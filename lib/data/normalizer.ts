@@ -51,6 +51,7 @@ export function normalizeRow(row: RawEmployeeRow): Employee {
         : null,
     employmentType: parseEmploymentType(row.employmentType),
     project: row.project?.trim() || null,
+    skill: row.skill?.trim() || undefined,
     skills: parseSkills(row.skills),
   };
 }

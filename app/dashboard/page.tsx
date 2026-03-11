@@ -10,6 +10,7 @@ import { OrgChartCanvas } from "@/components/org-chart/org-chart-canvas";
 export default function DashboardPage() {
   const {
     allEmployees,
+    employees,
     tree,
     snapshot,
     tierGroups,
@@ -51,7 +52,7 @@ export default function DashboardPage() {
                     tierGroups={tierGroups}
                     allEmployees={allEmployees}
                   />
-                  <DepartmentDistribution data={departmentDistribution} />
+                  <DepartmentDistribution data={departmentDistribution} employees={employees} />
                 </div>
               ),
             },

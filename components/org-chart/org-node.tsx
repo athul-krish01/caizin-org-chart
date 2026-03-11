@@ -3,7 +3,7 @@
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import type { Employee } from "@/lib/types/employee";
 import { Avatar } from "@/components/shared/avatar";
-import { Building2, ChevronDown, ChevronRight, FolderKanban, GitBranch, Users } from "lucide-react";
+import { Building2, ChevronDown, ChevronRight, FolderKanban, GitBranch, Users, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getDeptBorderL } from "@/lib/constants/department-colors";
 
@@ -71,6 +71,13 @@ export function OrgNode({ data }: NodeProps) {
         <div className="space-y-2 px-4 py-3">
           <MetaRow icon={<Building2 className="h-3 w-3" />} value={employee.department} />
           {employee.project && <MetaRow icon={<FolderKanban className="h-3 w-3" />} value={employee.project} />}
+          {employee.skill && (
+            <MetaRow
+              icon={<Zap className="h-3 w-3 text-violet-600" />}
+              value={employee.skill}
+              badge
+            />
+          )}
           {managerName && <MetaRow icon={<GitBranch className="h-3 w-3" />} value={managerName} />}
         </div>
 
@@ -131,15 +138,29 @@ export function OrgNode({ data }: NodeProps) {
   );
 }
 
-function MetaRow({ icon, value }: { icon: React.ReactNode; value: string }) {
+function MetaRow({
+  icon,
+  value,
+  badge,
+}: {
+  icon: React.ReactNode;
+  value: string;
+  badge?: boolean;
+}) {
   return (
     <div className="flex items-center gap-2 min-w-0">
       <span className="shrink-0 text-muted-foreground">
         {icon}
       </span>
-      <span className="truncate text-[11px] text-foreground/80">
-        {value}
-      </span>
+      {badge ? (
+        <span className="inline-flex items-center rounded-md bg-violet-50 px-2 py-0.5 text-[11px] font-medium text-violet-700">
+          {value}
+        </span>
+      ) : (
+        <span className="truncate text-[11px] text-foreground/80">
+          {value}
+        </span>
+      )}
     </div>
   );
 }

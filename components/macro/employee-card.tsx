@@ -1,4 +1,5 @@
 import type { Employee } from "@/lib/types/employee";
+import { Zap } from "lucide-react";
 import { Avatar } from "@/components/shared/avatar";
 import { cn } from "@/lib/utils";
 
@@ -36,6 +37,28 @@ export function EmployeeCard({ employee, managerName }: EmployeeCardProps) {
         <p className="truncate text-xs text-muted-foreground">
           {employee.title}
         </p>
+        {(employee.department !== "Unassigned" ||
+          employee.project ||
+          employee.skill) && (
+        <div className="mt-1 flex flex-wrap items-center gap-2">
+          {employee.department !== "Unassigned" && (
+            <span className="inline-flex items-center rounded-md bg-secondary px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+              {employee.department}
+            </span>
+          )}
+          {employee.project && (
+            <span className="inline-flex items-center rounded-md bg-secondary px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+              {employee.project}
+            </span>
+          )}
+          {employee.skill && (
+            <span className="inline-flex items-center gap-1 rounded-md bg-violet-50 px-2 py-0.5 text-[11px] font-medium text-violet-700">
+              <Zap className="h-3 w-3" />
+              {employee.skill}
+            </span>
+          )}
+        </div>
+        )}
         <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
           {empType && (
             <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium", empType.className)}>

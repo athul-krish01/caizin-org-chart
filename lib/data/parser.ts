@@ -7,50 +7,44 @@ function cellToString(value: unknown): string {
 }
 
 function normalizeColName(raw: string): string {
-  return raw.toLowerCase().replace(/[\s_-]/g, "");
+  return raw.toLowerCase().replace(/[\s_\-/()]/g, "");
 }
 
-const FIELD_HEADERS: Record<keyof Omit<RawEmployeeRow, "skills">, string> = {
+/**
+ * New HR sheet column headers (normalized for matching).
+ * Maps Excel headers to internal field names.
+ */
+const HR_SHEET_HEADERS: Record<keyof Omit<RawEmployeeRow, "skills">, string> = {
   employeeId: "employeeid",
-  name: "name",
-  title: "title",
+  name: "employeenameasperkeka",
+  title: "jobtitlekeka",
   level: "level",
   department: "department",
-  reportingManagerId: "reportingmanagerid",
-  employmentType: "employmenttype",
-  project: "project",
+  reportingManagerId: "skillmanager",
+  employmentType: "businessunit",
+  project: "projecttrack",
+  skill: "skill",
 };
 
-const FALLBACK_INDICES: Record<string, number> = {
-  employeeid: 0,
-  name: 1,
-  title: 2,
-  level: 3,
-  department: 4,
-  reportingmanagerid: 5,
-  employmenttype: 6,
-  project: 7,
-};
-
-function resolveColumnIndices(headerRow: unknown[]) {
+function resolveColumnIndices(headerRow: unknown[]): Record<keyof Omit<RawEmployeeRow, "skills">, number> {
   const headerMap = new Map<string, number>();
   for (let j = 0; j < headerRow.length; j++) {
     const normalized = normalizeColName(cellToString(headerRow[j]));
     if (normalized) headerMap.set(normalized, j);
   }
 
-  const resolve = (field: string): number =>
-    headerMap.get(field) ?? FALLBACK_INDICES[field] ?? -1;
+  const resolve = (field: string): number => headerMap.get(field) ?? -1;
 
   return {
-    employeeId: resolve(FIELD_HEADERS.employeeId),
-    name: resolve(FIELD_HEADERS.name),
-    title: resolve(FIELD_HEADERS.title),
-    level: resolve(FIELD_HEADERS.level),
-    department: resolve(FIELD_HEADERS.department),
-    reportingManagerId: resolve(FIELD_HEADERS.reportingManagerId),
-    employmentType: resolve(FIELD_HEADERS.employmentType),
-    project: resolve(FIELD_HEADERS.project),
+    employeeId: resolve(HR_SHEET_HEADERS.employeeId),
+    name: resolve(HR_SHEET_HEADERS.name),
+    title: resolve(HR_SHEET_HEADERS.title),
+    level: resolve(HR_SHEET_HEADERS.level),
+    department: resolve(HR_SHEET_HEADERS.department),
+    reportingManagerId: resolve(HR_SHEET_HEADERS.reportingManagerId),
+    employmentType: resolve(HR_SHEET_HEADERS.employmentType),
+    project: resolve(HR_SHEET_HEADERS.project),
+    skill: resolve(HR_SHEET_HEADERS.skill),
   };
 }
 
@@ -78,45 +72,68 @@ export async function parseExcelFile(file: File): Promise<RawEmployeeRow[]> {
 
   const idx = resolveColumnIndices(rows[0] as unknown[]);
 
+  if (idx.employeeId === -1) {
+    throw new Error(
+      "Could not find 'Employee ID' column. Headers found: " +
+        (rows[0] as unknown[]).map(cellToString).join(", ")
+    );
+  }
+
   if (idx.name === -1) {
     throw new Error(
-      "Could not find a 'name' column. Headers found: " +
+      "Could not find 'Employee Name (As Per Keka)' column. Headers found: " +
         (rows[0] as unknown[]).map(cellToString).join(", ")
     );
   }
 
   const dataRows = rows.slice(1);
   const result: RawEmployeeRow[] = [];
+  const managerNames: string[] = [];
 
   for (let i = 0; i < dataRows.length; i++) {
     const row = dataRows[i] as unknown[];
 
-    const employeeId = cellToString(row[idx.employeeId]) || `ROW_${i + 2}`;
-    const name = cellToString(row[idx.name]);
-    const title = cellToString(row[idx.title]);
-    const level = cellToString(row[idx.level]);
-    const department = cellToString(row[idx.department]);
-    const reportingManagerIdRaw = cellToString(row[idx.reportingManagerId]);
-    const employmentTypeRaw = cellToString(row[idx.employmentType]);
-    const projectRaw = cellToString(row[idx.project]);
+    const employeeId = idx.employeeId >= 0 ? cellToString(row[idx.employeeId]) : "";
+    if (!employeeId) continue;
 
-    if (!name) continue;
+    const name = idx.name >= 0 ? cellToString(row[idx.name]) : "";
+    const title = idx.title >= 0 ? cellToString(row[idx.title]) : "";
+    const levelRaw = idx.level >= 0 ? cellToString(row[idx.level]) : "";
+    const level = levelRaw || "L2";
+    const department = idx.department >= 0 ? cellToString(row[idx.department]) : "";
+    const managerName =
+      idx.reportingManagerId >= 0 ? cellToString(row[idx.reportingManagerId]) : "";
+    const employmentTypeRaw =
+      idx.employmentType >= 0 ? cellToString(row[idx.employmentType]) : "";
+    const projectRaw = idx.project >= 0 ? cellToString(row[idx.project]) : "";
+    const skillRaw = idx.skill >= 0 ? cellToString(row[idx.skill]) : "";
 
-    const reportingManagerId =
-      reportingManagerIdRaw === "" || reportingManagerIdRaw === "0"
-        ? null
-        : reportingManagerIdRaw;
-
+    managerNames.push(managerName);
     result.push({
       employeeId,
       name,
       title,
       level,
       department,
-      reportingManagerId,
+      reportingManagerId: null,
       ...(employmentTypeRaw ? { employmentType: employmentTypeRaw } : {}),
       ...(projectRaw ? { project: projectRaw } : {}),
+      ...(skillRaw ? { skill: skillRaw } : {}),
     });
+  }
+
+  const nameToId: Record<string, string> = {};
+  for (const emp of result) {
+    if (emp.name && !(emp.name in nameToId)) {
+      nameToId[emp.name] = emp.employeeId;
+    }
+  }
+
+  for (let i = 0; i < result.length; i++) {
+    const managerName = managerNames[i];
+    if (managerName && managerName !== "0") {
+      result[i].reportingManagerId = nameToId[managerName] ?? null;
+    }
   }
 
   return result;

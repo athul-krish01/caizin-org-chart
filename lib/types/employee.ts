@@ -7,6 +7,7 @@ export interface RawEmployeeRow {
   reportingManagerId: string | null;
   employmentType?: string;
   project?: string;
+  skill?: string;
   skills?: string;
 }
 
@@ -35,6 +36,7 @@ export interface Employee {
   reportingManagerId: string | null;
   employmentType: "internal" | "contractor" | "caizin" | "unknown";
   project: string | null;
+  skill?: string;
   skills: string[];
 }
 
